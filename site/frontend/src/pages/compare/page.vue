@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import {loadBenchmarkInfo} from "../../api";
 import AsOf from "../../components/as-of.vue";
 import {
@@ -7,7 +7,7 @@ import {
   getUrlParams,
   navigateToUrlParams,
 } from "../../utils/navigation";
-import {computed, Ref, ref} from "vue";
+import {computed, Ref, ref, h} from "vue";
 import {withLoading} from "../../utils/loading";
 import {postMsgpack} from "../../utils/requests";
 import {COMPARE_DATA_URL} from "../../urls";
@@ -16,7 +16,7 @@ import BootstrapTable from "./bootstrap/bootstrap-table.vue";
 import Header from "./header/header.vue";
 import DataSelector, {SelectionParams} from "./header/data-selector.vue";
 import {computeSummary, filterNonRelevant, SummaryGroup} from "./data";
-import Tabs from "./tabs.vue";
+import Tabs from "../../components/tabs.vue";
 import CompileBenchmarksPage from "./compile/compile-page.vue";
 import {
   computeCompileComparisonsWithNonRelevant,
@@ -29,6 +29,17 @@ import {
   defaultRuntimeFilter,
 } from "./runtime/common";
 import ArtifactSizeTable from "./artifact-size/artifact-size-table.vue";
+
+// ------ block abstract from tabs.vue ------
+import SummaryPercentValue from "./summary/percent-value.vue";
+import SummaryRange from "./summary/range.vue";
+import {
+  percentClass,
+  diffClass,
+  formatPercentChange,
+  formatSize,
+} from "./shared";
+// ------ block abstract from tabs.vue ------
 
 function loadSelectorFromUrl(urlParams: Dict<string>): CompareSelector {
   const start = urlParams["start"] ?? "";
@@ -138,6 +149,130 @@ function changeTab(newTab: Tab) {
 const data: Ref<CompareResponse | null> = ref(null);
 loadCompareData(selector, loading);
 let info = await loadBenchmarkInfo();
+
+// ------ block abstract from tabs.vue ------
+function SummaryTable({summary}: {summary: SummaryGroup}) {
+  const valid = summary.all.count > 0;
+  if (valid) {
+    return (
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Range</th>
+              <th>Mean</th>
+            </tr>
+          </thead>
+          <thead>
+            <tr>
+              <td>
+                <SummaryRange range={summary.all.range} />
+              </td>
+              <td>
+                <SummaryPercentValue
+                  class={percentClass(summary.all.average)}
+                  value={summary.all.average}
+                />
+              </td>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    );
+  }
+  return <div>No results</div>;
+}
+
+function formatBootstrap(value: number): string {
+  if (value > 0.0) {
+    return (value / 10e8).toFixed(3);
+  }
+  return "???";
+}
+
+function formatArtifactSize(size: number): string {
+  if (size === 0) {
+    return "???";
+  }
+  return formatSize(size);
+}
+
+const bootstrapA = data.value.a.bootstrap_total;
+const bootstrapB = data.value.b.bootstrap_total;
+const bootstrapValid = bootstrapA > 0.0 && bootstrapB > 0.0;
+
+const totalSizeA = Object.values(data.value.a.component_sizes).reduce(
+  (a, b) => a + b,
+  0
+);
+const totalSizeB = Object.values(data.value.b.component_sizes).reduce(
+  (a, b) => a + b,
+  0
+);
+const sizesAvailable: boolean = totalSizeA > 0 || totalSizeB > 0;
+const bothSizesAvailable: boolean = totalSizeA > 0 && totalSizeB > 0;
+
+const tabs = [
+  {
+    tooltip:
+      "Compilation time benchmarks: measure how long does it take to compile various crates using the compared rustc.",
+    title: "Compile-time",
+    selected: activeTab.value === Tab.CompileTime,
+    id: Tab.CompileTime,
+    summary: <SummaryTable summary={compileSummary.value} />,
+    isVisible: true,
+  },
+  {
+    tooltip:
+      "Runtime benchmarks: measure how long does it take to execute (i.e. how fast are) programs compiled by the compared rustc.",
+    title: "Runtime",
+    selected: activeTab.value === Tab.Runtime,
+    id: Tab.Runtime,
+    summary: <SummaryTable summary={runtimeSummary.value} />,
+    isVisible: true,
+  },
+  {
+    tooltip:
+      "Bootstrap duration: measures how long does it take to compile rustc by itself.",
+    title: "Bootstrap",
+    selected: activeTab.value === Tab.Bootstrap,
+    id: Tab.Bootstrap,
+    summary: (
+      <div>
+        {formatBootstrap(bootstrapA)} {"->"} {formatBootstrap(bootstrapB)}
+        {bootstrapValid && (
+          <div class={diffClass(bootstrapB - bootstrapA)}>
+            {((bootstrapB - bootstrapA) / 10e8).toFixed(1)}s (
+            {(((bootstrapB - bootstrapA) / bootstrapA) * 100).toFixed(3)}
+            %)
+          </div>
+        )}
+      </div>
+    ),
+    isVisible: true,
+  },
+  {
+    tooltip:
+      "Artifact size: sizes of individual components of the two artifacts.",
+    title: "Artifact size",
+    selected: activeTab.value === Tab.ArtifactSize,
+    id: Tab.ArtifactSize,
+    summary: (
+      <div>
+        {formatArtifactSize(totalSizeA)} {"->"} {formatArtifactSize(totalSizeB)}
+        {bothSizesAvailable && (
+          <div class={diffClass(totalSizeB - totalSizeA)}>
+            {totalSizeB < totalSizeA ? "-" : ""}
+            {formatSize(Math.abs(totalSizeB - totalSizeA))} (
+            {formatPercentChange(totalSizeA, totalSizeB)})
+          </div>
+        )}
+      </div>
+    ),
+    isVisible: sizesAvailable,
+  },
+];
+// ------ block abstract from tabs.vue ------
 </script>
 
 <template>
@@ -160,6 +295,7 @@ let info = await loadBenchmarkInfo();
         :initial-tab="initialTab"
         :compile-time-summary="compileSummary"
         :runtime-summary="runtimeSummary"
+        :tabs="tabs"
       />
       <template v-if="activeTab === Tab.CompileTime">
         <CompileBenchmarksPage
@@ -184,3 +320,16 @@ let info = await loadBenchmarkInfo();
   <br />
   <AsOf :info="info" />
 </template>
+
+<style scoped lang="scss">
+.table-wrapper {
+  table {
+    width: 100%;
+    table-layout: auto;
+  }
+
+  th {
+    font-weight: normal;
+  }
+}
+</style>

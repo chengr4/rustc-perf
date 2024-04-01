@@ -1,3 +1,4 @@
+<!-- remove later -->
 <script setup lang="tsx">
 import {h, ref, Ref} from "vue";
 import {CompareResponse, Tab} from "./types";
