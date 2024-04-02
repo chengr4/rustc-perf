@@ -29,12 +29,13 @@ import {
   defaultRuntimeFilter,
 } from "./runtime/common";
 import ArtifactSizeTable from "./artifact-size/artifact-size-table.vue";
+import SummaryTable from "./summary/tab-summary-table.vue";
 
 // ------ block abstract from tabs.vue ------
-import SummaryPercentValue from "./summary/percent-value.vue";
-import SummaryRange from "./summary/range.vue";
+// import SummaryPercentValue from "./summary/percent-value.vue";
+// import SummaryRange from "./summary/range.vue";
 import {
-  percentClass,
+  // percentClass,
   diffClass,
   formatPercentChange,
   formatSize,
@@ -151,37 +152,37 @@ loadCompareData(selector, loading);
 let info = await loadBenchmarkInfo();
 
 // ------ block abstract from tabs.vue ------
-function SummaryTable({summary}: {summary: SummaryGroup}) {
-  const valid = summary.all.count > 0;
-  if (valid) {
-    return (
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Range</th>
-              <th>Mean</th>
-            </tr>
-          </thead>
-          <thead>
-            <tr>
-              <td>
-                <SummaryRange range={summary.all.range} />
-              </td>
-              <td>
-                <SummaryPercentValue
-                  class={percentClass(summary.all.average)}
-                  value={summary.all.average}
-                />
-              </td>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    );
-  }
-  return <div>No results</div>;
-}
+// function SummaryTable({summary}: {summary: SummaryGroup}) {
+//   const valid = summary.all.count > 0;
+//   if (valid) {
+//     return (
+//       <div class="table-wrapper">
+//         <table>
+//           <thead>
+//             <tr>
+//               <th>Range</th>
+//               <th>Mean</th>
+//             </tr>
+//           </thead>
+//           <thead>
+//             <tr>
+//               <td>
+//                 <SummaryRange range={summary.all.range} />
+//               </td>
+//               <td>
+//                 <SummaryPercentValue
+//                   class={percentClass(summary.all.average)}
+//                   value={summary.all.average}
+//                 />
+//               </td>
+//             </tr>
+//           </thead>
+//         </table>
+//       </div>
+//     );
+//   }
+//   return <div>No results</div>;
+// }
 
 function formatBootstrap(value: number): string {
   if (value > 0.0) {
@@ -320,16 +321,3 @@ const tabs = [
   <br />
   <AsOf :info="info" />
 </template>
-
-<style scoped lang="scss">
-.table-wrapper {
-  table {
-    width: 100%;
-    table-layout: auto;
-  }
-
-  th {
-    font-weight: normal;
-  }
-}
-</style>
