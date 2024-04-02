@@ -29,7 +29,7 @@ import {
   defaultRuntimeFilter,
 } from "./runtime/common";
 import ArtifactSizeTable from "./artifact-size/artifact-size-table.vue";
-import SummaryTable from "./summary/tab-summary-table.vue";
+import TabSummaryTable from "./summary/tab-summary-table.vue";
 
 // ------ block abstract from tabs.vue ------
 import {
@@ -185,7 +185,7 @@ const tabs = [
     title: "Compile-time",
     selected: activeTab.value === Tab.CompileTime,
     id: Tab.CompileTime,
-    summary: <SummaryTable summary={compileSummary.value} />,
+    summary: <TabSummaryTable summary={compileSummary.value} />,
     isVisible: true,
   },
   {
@@ -194,7 +194,7 @@ const tabs = [
     title: "Runtime",
     selected: activeTab.value === Tab.Runtime,
     id: Tab.Runtime,
-    summary: <SummaryTable summary={runtimeSummary.value} />,
+    summary: <TabSummaryTable summary={runtimeSummary.value} />,
     isVisible: true,
   },
   {
