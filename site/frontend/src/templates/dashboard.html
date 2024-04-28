@@ -1,13 +1,16 @@
-{% extends "layout.html" %}
-{% block content %}
-<details style="margin-top: 10px;">
-<summary>What data is in the dashboard?</summary>
+{% extends "layout.html" %} {% block content %}
+<details style="margin-top: 10px">
+  <summary>What data is in the dashboard?</summary>
 
-The dashboard shows performance results for all stable Rust releases going back to
-<code>1.28.0</code>, along with the latest <code>beta</code> release. The displayed
-duration is an arithmetic mean amongst all
-<a href="https://github.com/rust-lang/rustc-perf/tree/master/collector/compile-benchmarks#stable">stable</a>
-benchmarks.
+  The dashboard shows performance results for all stable Rust releases going
+  back to
+  <code>1.28.0</code>, along with the latest <code>beta</code> release. The
+  displayed duration is an arithmetic mean amongst all
+  <a
+    href="https://github.com/rust-lang/rustc-perf/tree/master/collector/compile-benchmarks#stable"
+    >stable</a
+  >
+  benchmarks.
 </details>
 
 <div id="check-average-times"></div>
@@ -15,7 +18,6 @@ benchmarks.
 <div id="opt-average-times"></div>
 <div id="doc-average-times"></div>
 <div id="as-of"></div>
-{% endblock %}
-{% block script %}
+{% endblock %} {% block script %}
 <script type="module" src="../pages/dashboard.ts"></script>
 {% endblock %}
